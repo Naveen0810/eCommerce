@@ -4,19 +4,40 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const swaggerUI = require("swagger-ui-express");
 const swaggerSpec = require("./docs/swagger");
+
 const app = express();
+
+/* =======================
+   Middleware
+======================= */
 app.use(express.json());
 
-connectDB();
+/* =======================
+   Routes
+======================= */
+app.use("/api/auth", authRoutes);
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
-app.use("/api/auth",authRoutes);
+app.get("/", (req, res) => {
+    res.status(200).send("🚀 Swagger API is running...");
+});
 
-app.use("/api-docs",swaggerUI.serve,swaggerUI.setup(swaggerSpec));
+/* =======================
+   Start Server Safely
+======================= */
+const PORT = process.env.PORT || 3000;
 
-app.get("/",(req,res)=>{
-    res.send("Swagger API Running...");
-})
+const startServer = async () => {
+    try {
+        await connectDB();
+        app.listen(PORT, () => {
+            console.log(`✅ Server running on port ${PORT}`);
+            console.log(`📄 Swagger Docs: /api-docs`);
+        });
+    } catch (error) {
+        console.error("❌ Failed to start server:", error.message);
+        process.exit(1);
+    }
+};
 
-app.listen(process.env.PORT,()=>{
-    console.log("Server running at port 3000");
-})
+startServer();
